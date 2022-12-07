@@ -45,8 +45,8 @@ use std::sync::Mutex;
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::serde::Deserialize;
 use rocket::{fairing, Build, Rocket};
-use logging::ClientInitGuard;
-use logging::sentry::{Span, TransactionOrSpan};
+use sentry::ClientInitGuard;
+use sentry::{Span,TransactionOrSpan};
 
 pub struct RocketSentry {
     guard: Mutex<Option<ClientInitGuard>>,
@@ -110,13 +110,13 @@ impl Fairing for RocketSentry {
         if let Some(sentry_trace) = req.headers().get_one("sentry-trace") {
             headers.push(("sentry-trace",sentry_trace)); }
 
-        let transaction_ctx = logging::sentry::TransactionContext::continue_from_headers(
+        let transaction_ctx = sentry::TransactionContext::continue_from_headers(
             "ApiGateway",
             "on_request",
             headers,
         );
-        let transaction =  logging::sentry::start_transaction(transaction_ctx);
-        logging::sentry::configure_scope(|scope| scope.set_span(Some( transaction.clone().into())));
+        let transaction =  sentry::start_transaction(transaction_ctx);
+        sentry::configure_scope(|scope| scope.set_span(Some( transaction.clone().into())));
 
         //add data to scope?
         //force to beginning of scope?
